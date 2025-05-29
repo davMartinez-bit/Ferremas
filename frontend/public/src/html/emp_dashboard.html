@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Empleado - Ferremas</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="dashboard-container">
+    <header>
+      <h1>Panel de Empleado</h1>
+      <div class="user-info">
+        <span id="usernameDisplay"></span>
+        <button onclick="logout()">Cerrar Sesión</button>
+      </div>
+    </header>
+    
+    <nav>
+      <ul>
+        <li><a href="#" onclick="loadSection('productos')">Gestión de Productos</a></li>
+        <li><a href="#" onclick="loadSection('stock')">Control de Stock</a></li>
+        <li><a href="#" onclick="loadSection('mensajes')">Mensajes de Clientes</a></li>
+        <li><a href="#" onclick="loadSection('reportes')">Reportes</a></li>
+      </ul>
+    </nav>
+    
+    <main id="contentSection">
+      <!-- Contenido dinámico se cargará aquí -->
+      <h2>Bienvenido al panel de empleado</h2>
+      <p>Seleccione una opción del menú para comenzar.</p>
+    </main>
+  </div>
+
+  <script src="js/emp_dashboard.js"></script>
+</body>
+</html>

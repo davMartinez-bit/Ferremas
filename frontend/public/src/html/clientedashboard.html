@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferremas - Cliente</title>
+  <link rel="stylesheet" href="/css/clientedashboard.css" />
+</head>
+<body>
+  <header>
+    <h1>Panel del Cliente</h1>
+    <div class="user-actions">
+      <span id="usernameDisplay"></span>
+      <button onclick="logout()">Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="search-section">
+      <h2>Buscar productos</h2>
+      <div class="search-options">
+        <input type="text" id="searchTerm" placeholder="Nombre o código del producto">
+        <button onclick="searchProducts()">Buscar</button>
+      </div>
+      <div class="filter-options">
+        <select id="categoryFilter">
+          <option value="">Todas las categorías</option>
+          <!-- Las opciones se llenarán dinámicamente -->
+        </select>
+        <button onclick="filterByCategory()">Filtrar</button>
+      </div>
+    </section>
+
+    <section class="currency-section">
+      <h2>Conversor de divisas</h2>
+      <div class="currency-converter">
+        <input type="number" id="amount" placeholder="Monto" min="0" step="0.01">
+        <select id="fromCurrency">
+          <option value="USD">Dólar (USD)</option>
+          <option value="EUR">Euro (EUR)</option>
+          <option value="CLP">Peso Chileno (CLP)</option>
+        </select>
+        <span>a</span>
+        <select id="toCurrency">
+          <option value="CLP">Peso Chileno (CLP)</option>
+          <option value="USD">Dólar (USD)</option>
+          <option value="EUR">Euro (EUR)</option>
+        </select>
+        <button onclick="convertCurrency()">Convertir</button>
+        <div id="conversionResult"></div>
+      </div>
+    </section>
+
+    <section class="contact-section">
+      <h2>Contactar a un vendedor</h2>
+      <textarea id="messageContent" placeholder="Escribe tu mensaje aquí..."></textarea>
+      <button onclick="sendMessage()">Enviar mensaje</button>
+    </section>
+
+    <section class="products-section">
+      <h2>Productos destacados</h2>
+      <div class="product-categories">
+        <button onclick="getFeaturedProducts('promociones')">Promociones</button>
+        <button onclick="getFeaturedProducts('lanzamientos')">Nuevos lanzamientos</button>
+      </div>
+      <div id="resultado" class="resultado"></div>
+    </section>
+  </main>
+
+  <script src="js/cliente_dashboard.js"></script>
+</body>
+</html>
