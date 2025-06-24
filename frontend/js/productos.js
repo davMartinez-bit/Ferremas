@@ -13,46 +13,39 @@ let cargandoDivisas = false;
 // Al cargar la página, obtener productos reales desde la API
 
 document.addEventListener('DOMContentLoaded', async function() {
-    console.log('🚀 Inicializando página de productos...');
-    
     try {
         // 1. Verificar estado de autenticación
-        console.log('🔍 Verificando autenticación...');
         await checkUserAuthStatus();
         
         // 2. Cargar tasas de cambio del Banco Central
-        console.log('💱 Cargando tasas de cambio...');
         await cargarTasasCambio();
         
-        // 3. Cargar productos
-        console.log('📦 Cargando productos...');
+        // 3. Cargar categorías
+        await cargarCategorias();
+        
+        // 4. Cargar productos
         await cargarProductos();
         
-        // 4. Cargar carrito si el usuario está autenticado
+        // 5. Cargar carrito si el usuario está autenticado
         if (currentUser) {
-            console.log('🛒 Cargando carrito...');
             await cargarCarrito();
             actualizarContadorCarrito();
         }
         
-        // 5. Configurar event listeners
-        console.log('🎧 Configurando event listeners...');
+        // 6. Configurar event listeners
         configurarEventListeners();
         
-        // 6. Configurar selector de divisas
-        console.log('💱 Configurando selector de divisas...');
+        // 7. Configurar selector de divisas
         configurarSelectorDivisas();
         
-        // 7. Configurar botón de prueba Webpay
+        // 8. Configurar botón de prueba Webpay
         const testWebpayBtn = document.getElementById('test-webpay-btn');
         if (testWebpayBtn) {
             testWebpayBtn.addEventListener('click', testWebpayRedirect);
         }
         
-        console.log('✅ Inicialización completada');
-        
     } catch (error) {
-        console.error('❌ Error durante la inicialización:', error);
+        console.error('Error durante la inicialización:', error);
         showNotification('Error al cargar la página', 'error');
     }
 });
@@ -69,12 +62,8 @@ function mostrarProductos() {
         return;
     }
     
-    console.log('Productos recibidos:', productos);
-    console.log('Primer producto:', productos[0]);
-    
     grid.innerHTML = productos.map(producto => {
         const esFavorito = favoritos.some(fav => fav.producto_id === producto.id);
-        console.log(`Generando HTML para producto:`, producto);
         return `
         <div class="producto-card">
             <div class="favorito-icon" onclick="toggleFavorite(this, ${producto.id})">
@@ -97,64 +86,41 @@ function mostrarProductos() {
 
 // Funciones del carrito integradas con la API
 async function agregarAlCarrito(productoId) {
-    console.log('🛒 agregarAlCarrito llamado con productoId:', productoId);
-    console.log('👤 Estado del usuario:');
-    console.log('  - currentUser:', currentUser ? currentUser.nombre : 'null');
-    console.log('  - Token presente:', localStorage.getItem('authToken') ? '✅' : '❌');
-    
     try {
         if (!currentUser) {
-            console.log('❌ Usuario no autenticado, mostrando mensaje...');
             showNotification('Debes iniciar sesión para agregar productos al carrito', 'warning');
             
             // Mostrar un modal o confirmación antes de redirigir
             const confirmar = confirm('¿Deseas ir a la página de inicio de sesión?');
             if (confirmar) {
-                console.log('🔄 Redirigiendo a login...');
                 window.location.href = "/login";
-            } else {
-                console.log('❌ Usuario canceló la redirección');
             }
             return;
         }
         
-        console.log('✅ Usuario autenticado, procediendo con la API...');
         const producto = productos.find(p => p.id === productoId);
         if (!producto) {
-            console.log('❌ Producto no encontrado con ID:', productoId);
             showNotification('Producto no encontrado', 'error');
             return;
         }
         
-        console.log('📦 Producto encontrado:', producto.nombre);
-        console.log('📤 Llamando a API.carrito.add con:', { producto_id: productoId, cantidad: 1 });
-        
         // Llamar a la API para agregar al carrito
         const result = await API.carrito.add({ producto_id: productoId, cantidad: 1 });
-        console.log('✅ Resultado de API.carrito.add:', result);
         
         showNotification(`${producto.nombre} agregado al carrito`, 'success');
         
         // Recargar carrito y actualizar contador
-        console.log('🔄 Recargando carrito...');
         await cargarCarrito();
         actualizarContadorCarrito();
         
         // Abrir carrito para mostrar el producto agregado
-        console.log('🔄 Abriendo carrito...');
         abrirCarrito();
         
     } catch (error) {
-        console.error('❌ Error en agregarAlCarrito:', error);
-        console.error('📋 Detalles del error:', {
-            message: error.message,
-            stack: error.stack,
-            name: error.name
-        });
+        console.error('Error en agregarAlCarrito:', error);
         
         // Manejar errores específicos
         if (error.message && error.message.includes('No autorizado')) {
-            console.log('🔐 Error de autorización, limpiando sesión...');
             clearAuthData();
             updateAuthUI();
             showNotification('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.', 'warning');
@@ -573,15 +539,25 @@ function configurarEventListeners() {
     }
 }
 
-// Funciones de filtrado
+function normalizarTexto(texto) {
+    return (texto || '').toString().trim().toLowerCase().normalize('NFD').replace(/[0-\u036f]/g, '');
+}
+
 function filtrarProductos() {
-    const nombre = document.getElementById('filtro-nombre')?.value.toLowerCase() || '';
-    const categoria = document.getElementById('filtro-categoria')?.value || '';
+    const nombre = normalizarTexto(document.getElementById('filtro-nombre')?.value);
+    const categoriaId = document.getElementById('filtro-categoria')?.value || '';
+    const precioMin = document.getElementById('filtro-precio-min')?.value || '';
+    const precioMax = document.getElementById('filtro-precio-max')?.value || '';
     
     const productosFiltrados = productos.filter(producto => {
-        const matchNombre = producto.nombre.toLowerCase().includes(nombre);
-        const matchCategoria = !categoria || producto.categoria === categoria;
-        return matchNombre && matchCategoria;
+        // Filtro por nombre
+        const matchNombre = !nombre || normalizarTexto(producto.nombre).includes(nombre);
+        // Filtro por categoría (por ID)
+        const matchCategoria = !categoriaId || (producto.categoria && String(producto.categoria.id) === categoriaId);
+        // Filtros por precio
+        const matchPrecioMin = !precioMin || producto.precio_actual >= parseFloat(precioMin);
+        const matchPrecioMax = !precioMax || producto.precio_actual <= parseFloat(precioMax);
+        return matchNombre && matchCategoria && matchPrecioMin && matchPrecioMax;
     });
     
     mostrarProductosFiltrados(productosFiltrados);
@@ -621,8 +597,6 @@ function mostrarProductosFiltrados(productosFiltrados) {
 
 // Función para mostrar notificaciones
 function showNotification(message, type = 'info') {
-    console.log(`📢 Notificación [${type}]: ${message}`);
-    
     // Crear elemento de notificación
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
@@ -712,20 +686,10 @@ async function finalizarCompra() {
     
     try {
         showNotification('Iniciando pago seguro con Webpay...', 'info');
-        console.log("Iniciando proceso de pago...");
         
         const response = await API.pagos.createWebpayTransaction();
-        console.log("Respuesta completa de Webpay:", response);
         
         if (response && response.url && response.token) {
-            console.log("=== DEBUG REDIRECCIÓN WEBPAY ===");
-            console.log("URL completa:", response.url);
-            console.log("Token:", response.token);
-            console.log("Total con IVA:", response.total);
-            console.log("Subtotal:", response.subtotal);
-            console.log("IVA:", response.iva);
-            console.log("Redirigiendo a Webpay via POST...");
-            
             // Crear un formulario temporal para hacer POST a Webpay
             const form = document.createElement('form');
             form.method = 'POST';
@@ -749,7 +713,6 @@ async function finalizarCompra() {
             const totalFormateado = response.total ? `$${response.total.toLocaleString()}` : '';
             showNotification(`Página de pago abierta. Total: ${totalFormateado}`, 'success');
         } else {
-            console.error("Respuesta inesperada de Webpay:", response);
             showNotification('No se pudo iniciar el pago. Intenta de nuevo.', 'error');
         }
     } catch (error) {
@@ -760,8 +723,6 @@ async function finalizarCompra() {
 
 // Función para manejar errores de red
 function handleNetworkError(error) {
-    console.error('🌐 Error de red detectado:', error);
-    
     let mensaje = 'Error de conexión. Por favor, verifica tu conexión a internet.';
     
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -774,21 +735,28 @@ function handleNetworkError(error) {
         mensaje = `Error: ${error.message}`;
     }
     
-    console.log('📢 Mostrando mensaje de error al usuario:', mensaje);
     showNotification(mensaje, 'error');
 }
 
 // Función de prueba para Webpay
 async function testWebpayRedirect() {
+    if (!currentUser) {
+        showNotification('Debes iniciar sesión para probar Webpay', 'warning');
+        return;
+    }
+    
+    if (!carrito || carrito.length === 0) {
+        showNotification('Agrega productos al carrito antes de probar Webpay', 'warning');
+        return;
+    }
+    
     try {
-        console.log("=== PRUEBA DIRECTA WEBPAY ===");
+        showNotification('Iniciando prueba de Webpay...', 'info');
+        
         const response = await API.pagos.createWebpayTransaction();
-        console.log("Respuesta de prueba:", response);
         
         if (response && response.url && response.token) {
-            console.log("Probando POST directo a Webpay con token:", response.token);
-            
-            // Crear formulario temporal para POST
+            // Crear formulario temporal para POST a Webpay
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = 'https://webpay3gint.transbank.cl/webpayserver/init_transaction.cgi';
@@ -804,25 +772,24 @@ async function testWebpayRedirect() {
             form.submit();
             document.body.removeChild(form);
             
-            showNotification('Página de pago abierta en nueva ventana', 'success');
+            showNotification('Página de prueba de Webpay abierta', 'success');
+        } else {
+            showNotification('Error al crear transacción de prueba', 'error');
         }
     } catch (error) {
-        console.error("Error en prueba Webpay:", error);
-        showNotification('Error en prueba: ' + error.message, 'error');
+        console.error('Error en prueba de Webpay:', error);
+        showNotification('Error al probar Webpay', 'error');
     }
 }
 
 async function toggleFavorite(element, productoId) {
     if (!currentUser) {
-        showNotification('Debes iniciar sesión para marcar favoritos', 'warning');
-        if (confirm('¿Deseas ir a la página de inicio de sesión?')) {
-            window.location.href = "/login.html";
-        }
+        showNotification('Debes iniciar sesión para agregar favoritos', 'warning');
         return;
     }
 
     const heartIcon = element.querySelector('i');
-    const esFavorito = heartIcon.classList.contains('fas');
+    if (!heartIcon) return;
 
     // Cambiar el ícono inmediatamente para una respuesta visual rápida
     heartIcon.classList.toggle('far');
@@ -831,7 +798,6 @@ async function toggleFavorite(element, productoId) {
     try {
         // Usar el endpoint toggle que maneja agregar/eliminar automáticamente
         const result = await API.favoritos.toggle(productoId);
-        console.log('Resultado toggle favorito:', result);
         
         if (result.status === 'agregado') {
             showNotification('Agregado a favoritos', 'success');
@@ -856,20 +822,14 @@ async function toggleFavorite(element, productoId) {
 
 // Función para cargar productos
 async function cargarProductos() {
-    console.log('📦 cargarProductos iniciado...');
-    
     try {
         productos = await API.productos.getAll();
-        console.log(`✅ Productos cargados: ${productos.length} productos`);
         
         // Cargar favoritos si el usuario está autenticado
         if (currentUser) {
-            console.log('❤️ Cargando favoritos...');
             try {
                 favoritos = await API.favoritos.getAll();
-                console.log(`✅ Favoritos cargados: ${favoritos.length} items`);
             } catch (error) {
-                console.warn('⚠️ Error al cargar favoritos:', error);
                 favoritos = [];
             }
         }
@@ -877,7 +837,7 @@ async function cargarProductos() {
         mostrarProductos();
         
     } catch (error) {
-        console.error('❌ Error al cargar productos:', error);
+        console.error('Error al cargar productos:', error);
         showNotification('Error al cargar productos', 'error');
         productos = [];
         favoritos = [];
@@ -889,11 +849,9 @@ async function cargarTasasCambio() {
     if (cargandoDivisas) return;
     
     cargandoDivisas = true;
-    console.log('🔄 Cargando tasas de cambio del Banco Central...');
     
     try {
         const resultado = await API.divisas.getAll();
-        console.log('✅ Tasas de cambio cargadas:', resultado);
         
         // Procesar las tasas de cambio
         resultado.forEach(divisa => {
@@ -901,8 +859,6 @@ async function cargarTasasCambio() {
                 tasasCambio[divisa.moneda] = divisa.valor_clp;
             }
         });
-        
-        console.log('📊 Tasas de cambio procesadas:', tasasCambio);
         
         // Actualizar la información de tasa de cambio
         actualizarInfoTasaCambio();
@@ -913,7 +869,7 @@ async function cargarTasasCambio() {
         }
         
     } catch (error) {
-        console.error('❌ Error al cargar tasas de cambio:', error);
+        console.error('Error al cargar tasas de cambio:', error);
         showNotification('Error al cargar tasas de cambio', 'error');
     } finally {
         cargandoDivisas = false;
@@ -995,13 +951,11 @@ function configurarSelectorDivisas() {
     // Agregar event listener para cambio de divisa
     selectorDivisa.addEventListener('change', async function(e) {
         const nuevaDivisa = e.target.value;
-        console.log('💱 Cambiando divisa de', divisaSeleccionada, 'a', nuevaDivisa);
         
         divisaSeleccionada = nuevaDivisa;
         
         // Si es la primera vez que se selecciona una divisa extranjera, cargar tasas
         if (nuevaDivisa !== 'CLP' && !tasasCambio[nuevaDivisa]) {
-            console.log('🔄 Cargando tasas de cambio para', nuevaDivisa);
             await cargarTasasCambio();
         }
         
@@ -1020,5 +974,42 @@ function configurarSelectorDivisas() {
         
         showNotification(`Moneda cambiada a ${nuevaDivisa}`, 'success');
     });
+}
+
+// Función para cargar categorías dinámicamente
+async function cargarCategorias() {
+    try {
+        const categorias = await API.productos.getCategorias();
+        
+        const selectCategoria = document.getElementById('filtro-categoria');
+        if (!selectCategoria) {
+            return;
+        }
+        
+        selectCategoria.innerHTML = '<option value="">Todas las categorías</option>';
+        
+        if (Array.isArray(categorias) && categorias.length > 0) {
+            categorias.forEach((categoria, index) => {
+                const option = document.createElement('option');
+                option.value = categoria.id;
+                option.textContent = categoria.nombre;
+                selectCategoria.appendChild(option);
+                
+                // Subcategorías
+                if (categoria.subcategorias && categoria.subcategorias.length > 0) {
+                    categoria.subcategorias.forEach(subcategoria => {
+                        const subOption = document.createElement('option');
+                        subOption.value = subcategoria.id;
+                        subOption.textContent = `  └ ${subcategoria.nombre}`;
+                        selectCategoria.appendChild(subOption);
+                    });
+                }
+            });
+        }
+        
+    } catch (error) {
+        console.error('Error al cargar categorías:', error);
+        showNotification('Error al cargar categorías', 'error');
+    }
 } 
  

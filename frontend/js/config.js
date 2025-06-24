@@ -93,7 +93,9 @@ const API = {
         search: (query) => apiRequest(`/productos/buscar?q=${encodeURIComponent(query)}`),
         getByCategory: (categoryId) => apiRequest(`/productos/categoria/${categoryId}`),
         getDestacados: () => apiRequest('/productos/destacados'),
-        getPromociones: () => apiRequest('/productos/promociones')
+        getPromociones: () => apiRequest('/productos/promociones'),
+        getCategorias: () => apiRequest('/productos/categorias/'),
+        getMarcas: () => apiRequest('/productos/marcas/')
     },
 
     // Carrito

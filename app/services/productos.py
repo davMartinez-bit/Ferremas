@@ -344,6 +344,10 @@ class ProductoService:
         try:
             # Obtener todas las categorías
             categorias = self.db.query(Categoria).all()
+            
+            if not categorias:
+                return []
+            
             categorias_dict = {c.id: c for c in categorias}
 
             # Construir árbol de subcategorías
@@ -360,6 +364,7 @@ class ProductoService:
 
             # Categorías raíz (sin padre)
             categorias_raiz = [c for c in categorias if c.padre_id is None]
+            
             resultado = []
             for cat in categorias_raiz:
                 resultado.append(
@@ -370,9 +375,11 @@ class ProductoService:
                         subcategorias=build_subcategorias(cat.id)
                     )
                 )
+            
             return resultado
+            
         except Exception as e:
-            return {"error": f"Error obteniendo categorías: {str(e)}"}        
+            return []  # Devolver lista vacía en lugar de diccionario con error
 
     def get_marcas(self) -> List[Dict[str, Any]]:
         """Devuelve todas las marcas disponibles"""
