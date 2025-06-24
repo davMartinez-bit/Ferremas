@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferremas - Mi Cuenta</title>
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/clientedashboard.css" />
+  <link rel="stylesheet" href="../css/chat.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="logo">
+        <h1><i class="fas fa-tools"></i> Ferremas</h1>
+      </div>
+      <nav class="nav-menu">
+        <a href="/index.html" class="nav-link"><i class="fas fa-home"></i> Inicio</a>
+        <a href="/productos.html" class="nav-link" id="navProductos"><i class="fas fa-shopping-bag"></i> Productos</a>
+        <a href="/html/clientedashboard.html" class="nav-link active"><i class="fas fa-user"></i> Mi Cuenta</a>
+        <a href="/productos.html#carrito" class="nav-link" id="navCarrito"><i class="fas fa-shopping-cart"></i> Carrito</a>
+      </nav>
+      <div class="user-menu">
+        <span id="userName" class="user-name">Cliente</span>
+        <button id="navLogout" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Chat de Soporte Flotante -->
+  <div id="chat-bubble" class="chat-bubble" onclick="toggleChat()">
+    <i class="fas fa-comments"></i>
+    <span class="chat-notification" id="chatNotification" style="display: none;">1</span>
+  </div>
+
+  <!-- Chat de Soporte -->
+  <div id="chatContainer" class="chat-container">
+    <div class="chat-header">
+      <h3><i class="fas fa-headset"></i> Soporte en Vivo</h3>
+      <button onclick="toggleChat()" class="chat-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+      <div class="message system">
+        <p>¡Hola! ¿En qué podemos ayudarte hoy?</p>
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Escribe tu mensaje..." />
+      <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
+
+  <!-- Contenido Principal -->
+  <main class="dashboard-main">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+      <nav class="sidebar-nav">
+        <a href="#resumen-section" class="sidebar-link active" data-section="resumen-section">
+          <i class="fas fa-chart-line"></i> Resumen
+        </a>
+        <a href="#perfil-section" class="sidebar-link" data-section="perfil-section">
+          <i class="fas fa-user-cog"></i> Mi Perfil
+        </a>
+        <a href="#favoritos-section" class="sidebar-link" data-section="favoritos-section">
+          <i class="fas fa-heart"></i> Favoritos
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Contenido Dinámico -->
+    <div class="dashboard-content">
+      <!-- Sección Resumen -->
+      <section id="resumen-section" class="dashboard-section active">
+        <div class="section-header">
+          <h2>Resumen de Mi Cuenta</h2>
+          <p>Bienvenido de vuelta, <span id="userGreeting">Cliente</span></p>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="totalPedidos">0</h3>
+              <p>Pedidos Totales</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="pedidosPendientes">0</h3>
+              <p>Pedidos Pendientes</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="pedidosCompletados">0</h3>
+              <p>Pedidos Completados</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="recent-orders">
+          <h3>Pedidos Recientes</h3>
+          <div id="recentOrdersList" class="orders-list">
+            <!-- Los pedidos recientes se cargarán dinámicamente -->
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Mi Perfil -->
+      <section id="perfil-section" class="dashboard-section">
+        <div class="section-header">
+          <h2>Mi Perfil</h2>
+          <p>Actualiza tu información personal</p>
+        </div>
+        
+        <div class="profile-forms">
+          <div class="form-section">
+            <h3>Información Personal</h3>
+            <form id="profileForm" class="profile-form">
+              <div class="form-group">
+                <label for="profileName">Nombre Completo:</label>
+                <input type="text" id="profileName" required />
+              </div>
+              <div class="form-group">
+                <label for="profileEmail">Email:</label>
+                <input type="email" id="profileEmail" required />
+              </div>
+              <div class="form-group">
+                <label for="profilePhone">Teléfono:</label>
+                <input type="tel" id="profilePhone" />
+              </div>
+              <div class="form-group">
+                <label for="profileAddress">Dirección:</label>
+                <textarea id="profileAddress" rows="3"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Actualizar Perfil</button>
+            </form>
+          </div>
+          
+          <div class="form-section">
+            <h3>Cambiar Contraseña</h3>
+            <form id="passwordForm" class="password-form">
+              <div class="form-group">
+                <label for="currentPassword">Contraseña Actual:</label>
+                <input type="password" id="currentPassword" required />
+              </div>
+              <div class="form-group">
+                <label for="newPassword">Nueva Contraseña:</label>
+                <input type="password" id="newPassword" required />
+              </div>
+              <div class="form-group">
+                <label for="confirmPassword">Confirmar Nueva Contraseña:</label>
+                <input type="password" id="confirmPassword" required />
+              </div>
+              <button type="submit" class="btn btn-primary">Cambiar Contraseña</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Favoritos -->
+      <section id="favoritos-section" class="dashboard-section">
+        <div class="section-header">
+          <h2>Mis Favoritos</h2>
+          <p>Productos que te han gustado</p>
+        </div>
+        
+        <div id="favoritosContainer" class="favorites-container">
+          <!-- Los favoritos se cargarán dinámicamente -->
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/clientedashboard.js"></script>
+</body>
+</html>

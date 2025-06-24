@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Ferremas | Inicio</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="navbar">
+    <div class="logo">
+      <h1><i class="fas fa-tools"></i> Ferremas</h1>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/" class="active">Inicio</a></li>
+        <li><a href="/productos">Productos</a></li>
+        <li id="auth-links">
+          <!-- Se llena dinámicamente según el estado de autenticación -->
+        </li>
+      </ul>
+    </nav>
+    <div class="header-actions">
+      <div id="user-info" class="user-info" style="display: none;">
+        <span id="user-name" class="user-name">Cliente</span>
+        <button onclick="logout()" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+      <button id="toggle-cart" class="cart-button">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-count" class="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="main-content">
+    <section class="hero animate__animated animate__fadeIn">
+      <div class="hero-content">
+        <h1 class="animate__animated animate__fadeInDown">Bienvenido a <span class="highlight">Ferremas</span></h1>
+        <p class="animate__animated animate__fadeInUp">Tu ferretería de confianza para todas tus necesidades.</p>
+        <a href="/productos" class="btn-primary animate__animated animate__pulse animate__infinite">Ver productos</a>
+      </div>
+    </section>
+
+    <section class="features animate__animated animate__fadeIn">
+      <div class="feature-card">
+        <i class="fas fa-tools"></i>
+        <h3>Amplio Catálogo</h3>
+        <p>Encuentra todo lo que necesitas para tus proyectos</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-truck"></i>
+        <h3>Envío Rápido</h3>
+        <p>Entrega a domicilio en toda la ciudad</p>
+      </div>
+      <div class="feature-card">
+        <i class="fas fa-headset"></i>
+        <h3>Soporte 24/7</h3>
+        <p>Atención personalizada cuando la necesites</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2025 Ferremas. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

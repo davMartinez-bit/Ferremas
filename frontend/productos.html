@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ferremas | Productos</title>
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/productos.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+
+  <header class="navbar">
+    <div class="logo">
+      <h1><i class="fas fa-tools"></i> Ferremas</h1>
+    </div>
+    <nav>
+      <ul class="nav-links">
+        <li><a href="/">Inicio</a></li>
+        <li><a href="/productos" class="active">Productos</a></li>
+        <li id="auth-links">
+          <!-- Se llena dinámicamente según el estado de autenticación -->
+        </li>
+      </ul>
+    </nav>
+    <div id="dashboard-btn-container"></div>
+    <div class="header-actions">
+      <div id="user-info" class="user-info" style="display: none;">
+        <span id="user-name" class="user-name">Cliente</span>
+        <button onclick="logout()" class="btn-logout">
+          <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+        </button>
+      </div>
+      <button id="toggle-cart" class="cart-button">
+        <i class="fas fa-shopping-cart"></i>
+        <span id="cart-count" class="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="productos-page">
+    <section class="filtros-section">
+      <h2>Filtrar productos</h2>
+      <form id="filtro-form">
+        <input type="text" id="filtro-nombre" placeholder="Nombre del producto" />
+        <select id="filtro-categoria">
+          <option value="">Todas las categorías</option>
+          <option value="herramientas">Herramientas</option>
+          <option value="electricas">Eléctricas</option>
+          <option value="manuales">Manuales</option>
+          <option value="seguridad">Seguridad</option>
+        </select>
+        <input type="number" id="filtro-precio-min" placeholder="Precio mínimo" min="0" />
+        <input type="number" id="filtro-precio-max" placeholder="Precio máximo" min="0" />
+        
+        <!-- Selector de divisas -->
+        <div class="divisa-selector">
+          <select id="selector-divisa" class="divisa-select">
+            <option value="CLP">Peso Chileno (CLP)</option>
+            <option value="USD">Dólar Estadounidense (USD)</option>
+            <option value="EUR">Euro (EUR)</option>
+          </select>
+          <div id="tasa-cambio-info" class="tasa-cambio-info">
+            <small>Tasa de cambio actualizada del Banco Central de Chile</small>
+          </div>
+        </div>
+        
+        <button type="submit" class="btn-primary">Aplicar Filtros</button>
+      </form>
+    </section>
+
+    <section class="productos-section">
+      <h2>Lista de productos</h2>
+      <div id="productos-grid" class="productos-grid">
+        <!-- Se llena dinámicamente -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Carrito lateral -->
+  <div id="cart-sidebar" class="cart-sidebar">
+    <div class="cart-header">
+      <h3><i class="fas fa-shopping-cart"></i> Carrito de Compras</h3>
+      <button id="close-cart" class="close-cart">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    
+    <div class="cart-content">
+      <div id="cart-items" class="cart-items">
+        <div class="empty-cart">
+          <i class="fas fa-shopping-bag"></i>
+          <p>Tu carrito está vacío</p>
+          <span>Agrega productos para comenzar</span>
+        </div>
+      </div>
+      
+      <div class="cart-summary">
+        <div class="cart-totals">
+          <div class="subtotal">
+            <span>Subtotal:</span>
+            <span>$<span id="cart-subtotal">0</span></span>
+          </div>
+          <div class="tax">
+            <span>IVA (19%):</span>
+            <span>$<span id="cart-tax">0</span></span>
+          </div>
+          <div class="total">
+            <span>Total:</span>
+            <span>$<span id="cart-total">0</span></span>
+          </div>
+        </div>
+        
+        <div class="cart-actions">
+          <button id="clear-cart" class="btn-secondary">
+            <i class="fas fa-trash"></i> Vaciar Carrito
+          </button>
+          <button id="checkout-btn" class="btn-primary">
+            <i class="fas fa-credit-card"></i> Finalizar Compra
+          </button>
+          
+          <!-- Botón de prueba temporal -->
+          <button id="test-webpay-btn" class="btn btn-warning" style="margin-left: 10px;">
+            <i class="fas fa-test"></i> Probar Webpay
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overlay para cerrar carrito -->
+  <div id="cart-overlay" class="cart-overlay"></div>
+
+  <footer class="footer">
+    <p>&copy; 2025 Ferremas. Todos los derechos reservados.</p>
+  </footer>
+
+  <script src="js/config.js?v=1.4"></script>
+  <script src="js/auth.js?v=1.4"></script>
+  <script src="js/productos.js?v=1.4"></script>
+</body>
+</html>

@@ -8,7 +8,8 @@ from app.data.models import Producto, Categoria, Marca, PrecioHistorico
 from app.api.schemas import (
     ProductoCreate, ProductoUpdate, ProductoResponse, ProductoBasic,
     CategoriaResponse, MarcaResponse, HistorialPreciosResponse,
-    ProductoSearch, EstadisticasGenerales, FiltrosProducto
+    ProductoSearch, EstadisticasGenerales, FiltrosProducto,
+    CategoriaCompleteResponse, SubcategoriaResponse
 )
 
 class ProductoService:
@@ -139,6 +140,21 @@ class ProductoService:
 
         except Exception as e:
             return {"error": f"Error obteniendo productos por stock: {str(e)}"}
+
+    def get_all_productos(self, pagina: int = 1, por_pagina: int = 50) -> List[Dict[str, Any]]:
+        """Obtiene todos los productos activos"""
+        try:
+            productos = self.db.query(Producto).options(
+                joinedload(Producto.categoria),
+                joinedload(Producto.marca)
+            ).filter(
+                Producto.activo == True
+            ).order_by(asc(Producto.nombre)).all()
+
+            return self._format_productos_basicos(productos)
+
+        except Exception as e:
+            return {"error": f"Error obteniendo todos los productos: {str(e)}"}
 
     def buscar_productos_avanzado(self, filtros: FiltrosProducto, pagina: int = 1, por_pagina: int = 20) -> Dict[str, Any]:
         """Búsqueda avanzada de productos con múltiples filtros"""
@@ -271,4 +287,222 @@ class ProductoService:
             }
         except Exception as e:
             return {"error": f"Error obteniendo historial de precios: {str(e)}"}        
+    
+    def _format_productos_basicos(self, productos: List[Producto]) -> List[Dict[str, Any]]:
+        """Formatea una lista de productos en formato básico para respuestas de API"""
+        formatted_products = []
         
+        for producto in productos:
+            formatted_product = {
+                "id": producto.id,
+                "codigo": producto.codigo,
+                "nombre": producto.nombre,
+                "descripcion": producto.descripcion,
+                "stock": producto.stock,
+                "stock_minimo": producto.stock_minimo,
+                "unidad_medida": producto.unidad_medida,
+                "activo": producto.activo,
+                "destacado": producto.destacado,
+                "en_promocion": producto.en_promocion,
+                "peso": float(producto.peso) if producto.peso else None,
+                "dimensiones": producto.dimensiones,
+                "color": producto.color,
+                "modelo": producto.modelo,
+                "categoria_id": producto.categoria_id,
+                "marca_id": producto.marca_id,
+                "fecha_creacion": producto.fecha_creacion,
+                "fecha_actualizacion": producto.fecha_actualizacion,
+                "precio_actual": producto.precio_actual,
+                "categoria": {
+                    "id": producto.categoria.id,
+                    "nombre": producto.categoria.nombre,
+                    "descripcion": producto.categoria.descripcion
+                } if producto.categoria else None,
+                "marca": {
+                    "id": producto.marca.id,
+                    "nombre": producto.marca.nombre,
+                    "codigo": producto.marca.codigo
+                } if producto.marca else None
+            }
+            formatted_products.append(formatted_product)
+        
+        return formatted_products
+    
+    def _get_subcategorias_recursivo(self, categoria_id: int) -> List[int]:
+        """Obtiene todas las subcategorías de una categoría de forma recursiva"""
+        subcategorias = []
+        hijos = self.db.query(Categoria).filter(Categoria.padre_id == categoria_id).all()
+        
+        for hijo in hijos:
+            subcategorias.append(hijo.id)
+            subcategorias.extend(self._get_subcategorias_recursivo(hijo.id))
+        
+        return subcategorias        
+
+    def get_categorias(self) -> List[Dict[str, Any]]:
+        """Devuelve todas las categorías en formato jerárquico"""
+        try:
+            # Obtener todas las categorías
+            categorias = self.db.query(Categoria).all()
+            categorias_dict = {c.id: c for c in categorias}
+
+            # Construir árbol de subcategorías
+            def build_subcategorias(parent_id):
+                subcats = [c for c in categorias if c.padre_id == parent_id]
+                return [
+                    SubcategoriaResponse(
+                        id=sc.id,
+                        nombre=sc.nombre,
+                        descripcion=sc.descripcion,
+                        subcategorias=build_subcategorias(sc.id)
+                    ) for sc in subcats
+                ]
+
+            # Categorías raíz (sin padre)
+            categorias_raiz = [c for c in categorias if c.padre_id is None]
+            resultado = []
+            for cat in categorias_raiz:
+                resultado.append(
+                    CategoriaCompleteResponse(
+                        id=cat.id,
+                        nombre=cat.nombre,
+                        descripcion=cat.descripcion,
+                        subcategorias=build_subcategorias(cat.id)
+                    )
+                )
+            return resultado
+        except Exception as e:
+            return {"error": f"Error obteniendo categorías: {str(e)}"}        
+
+    def get_marcas(self) -> List[Dict[str, Any]]:
+        """Devuelve todas las marcas disponibles"""
+        try:
+            marcas = self.db.query(Marca).all()
+            return [
+                {
+                    "id": m.id,
+                    "nombre": m.nombre,
+                    "codigo": m.codigo
+                } for m in marcas
+            ]
+        except Exception as e:
+            return {"error": f"Error obteniendo marcas: {str(e)}"}
+
+    def get_productos_destacados(self) -> List[Dict[str, Any]]:
+        """Devuelve productos destacados (dummy/simple para evitar error 500)"""
+        try:
+            productos = self.db.query(Producto).filter(Producto.destacado == True).all()
+            return self._format_productos_basicos(productos)
+        except Exception as e:
+            return {"error": f"Error obteniendo productos destacados: {str(e)}"}
+
+    def get_productos_en_promocion(self) -> List[Dict[str, Any]]:
+        """Devuelve productos en promoción (dummy/simple para evitar error 500)"""
+        try:
+            productos = self.db.query(Producto).filter(Producto.en_promocion == True).all()
+            return self._format_productos_basicos(productos)
+        except Exception as e:
+            return {"error": f"Error obteniendo productos en promoción: {str(e)}"}
+
+    def get_productos_lanzamiento(self, dias: int = 30) -> List[Dict[str, Any]]:
+        """Devuelve productos lanzados recientemente (dummy/simple para evitar error 500)"""
+        try:
+            desde = datetime.utcnow() - timedelta(days=dias)
+            productos = self.db.query(Producto).filter(Producto.fecha_creacion >= desde).all()
+            return self._format_productos_basicos(productos)
+        except Exception as e:
+            return {"error": f"Error obteniendo productos de lanzamiento: {str(e)}"}
+
+    def create_producto(self, data: dict) -> dict:
+        """Crea un nuevo producto en la base de datos"""
+        try:
+            # Validar que el código no exista
+            if self.db.query(Producto).filter(Producto.codigo == data["codigo"]).first():
+                return {"error": f"Ya existe un producto con el código '{data['codigo']}'"}
+            
+            # Extraer el precio del data
+            precio_inicial = data.pop("precio_actual", 0)
+            
+            producto = Producto(
+                codigo=data["codigo"],
+                nombre=data["nombre"],
+                descripcion=data.get("descripcion", ""),
+                stock=data.get("stock", 0),
+                stock_minimo=data.get("stock_minimo", 0),
+                categoria_id=data.get("categoria_id"),
+                marca_id=data.get("marca_id"),
+                unidad_medida=data.get("unidad_medida", "unidad"),
+                destacado=data.get("destacado", False),
+                en_promocion=data.get("en_promocion", False),
+                peso=data.get("peso"),
+                fecha_creacion=datetime.utcnow(),
+                fecha_actualizacion=datetime.utcnow(),
+                activo=True
+            )
+            self.db.add(producto)
+            self.db.commit()
+            self.db.refresh(producto)
+            
+            # Crear el precio histórico inicial
+            if precio_inicial > 0:
+                precio_historico = PrecioHistorico(
+                    producto_id=producto.id,
+                    valor=precio_inicial,
+                    fecha=datetime.utcnow(),
+                    motivo="Precio inicial"
+                )
+                self.db.add(precio_historico)
+                self.db.commit()
+            
+            return self.get_producto_by_codigo(producto.codigo)
+        except Exception as e:
+            self.db.rollback()
+            return {"error": f"Error creando producto: {str(e)}"}
+
+    def update_producto(self, codigo: str, data: dict) -> dict:
+        """Actualiza un producto existente"""
+        try:
+            producto = self.db.query(Producto).filter(Producto.codigo == codigo).first()
+            if not producto:
+                return {"error": f"Producto con código '{codigo}' no encontrado"}
+            
+            # Manejar actualización de precio por separado
+            nuevo_precio = data.pop("precio_actual", None)
+            
+            # Actualizar campos del producto
+            for key, value in data.items():
+                if hasattr(producto, key):
+                    setattr(producto, key, value)
+            
+            producto.fecha_actualizacion = datetime.utcnow()
+            self.db.commit()
+            
+            # Si hay nuevo precio, crear registro en historial
+            if nuevo_precio is not None:
+                precio_historico = PrecioHistorico(
+                    producto_id=producto.id,
+                    valor=nuevo_precio,
+                    fecha=datetime.utcnow(),
+                    motivo="Actualización de precio"
+                )
+                self.db.add(precio_historico)
+                self.db.commit()
+            
+            self.db.refresh(producto)
+            return self.get_producto_by_codigo(producto.codigo)
+        except Exception as e:
+            self.db.rollback()
+            return {"error": f"Error actualizando producto: {str(e)}"}
+
+    def delete_producto(self, codigo: str) -> dict:
+        """Elimina un producto por su código"""
+        try:
+            producto = self.db.query(Producto).filter(Producto.codigo == codigo).first()
+            if not producto:
+                return {"error": f"Producto con código '{codigo}' no encontrado"}
+            self.db.delete(producto)
+            self.db.commit()
+            return {"message": f"Producto '{codigo}' eliminado correctamente"}
+        except Exception as e:
+            self.db.rollback()
+            return {"error": f"Error eliminando producto: {str(e)}"}        

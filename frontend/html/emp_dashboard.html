@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ferremas - Dashboard Administrador</title>
+  <link rel="stylesheet" href="../css/variables.css" />
+  <link rel="stylesheet" href="../css/components.css" />
+  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/admindashboard.css" />
+  <link rel="stylesheet" href="../css/chat.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header class="dashboard-header">
+    <div class="header-content">
+      <div class="logo">
+        <h1><i class="fas fa-tools"></i> Ferremas Admin</h1>
+      </div>
+      <nav class="nav-menu">
+        <a href="../index.html" class="nav-link"><i class="fas fa-home"></i> Inicio</a>
+        <a href="../productos.html" class="nav-link"><i class="fas fa-shopping-bag"></i> Tienda</a>
+        <a href="#" class="nav-link active"><i class="fas fa-cog"></i> Administración</a>
+      </nav>
+      <div class="user-menu">
+        <span id="adminName" class="user-name">Administrador</span>
+        <button onclick="logout()" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="dashboard-main">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+      <nav class="sidebar-nav">
+        <a href="#resumen" class="sidebar-link active" data-section="resumen">
+          <i class="fas fa-chart-line"></i> Resumen
+        </a>
+        <a href="#productos" class="sidebar-link" data-section="productos">
+          <i class="fas fa-box"></i> Productos
+        </a>
+        <a href="#usuarios" class="sidebar-link" data-section="usuarios">
+          <i class="fas fa-users"></i> Usuarios
+        </a>
+        <a href="#pedidos" class="sidebar-link" data-section="pedidos">
+          <i class="fas fa-shopping-cart"></i> Pedidos
+        </a>
+        <a href="#chat-soporte" class="sidebar-link" data-section="chat-soporte">
+          <i class="fas fa-comments"></i> Chat de Soporte
+          <span id="chat-notification" class="notification-badge" style="display: none;">0</span>
+        </a>
+        <a href="#reportes" class="sidebar-link" data-section="reportes">
+          <i class="fas fa-chart-bar"></i> Reportes
+        </a>
+        <a href="#configuracion" class="sidebar-link" data-section="configuracion">
+          <i class="fas fa-cogs"></i> Configuración
+        </a>
+      </nav>
+    </aside>
+
+    <!-- Contenido Dinámico -->
+    <div class="dashboard-content">
+      <!-- Sección Resumen -->
+      <section id="resumen" class="dashboard-section active">
+        <div class="section-header">
+          <h2>Panel de Control</h2>
+          <p>Resumen general del sistema</p>
+        </div>
+        
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="totalUsuarios">0</h3>
+              <p>Usuarios Registrados</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="totalPedidos">0</h3>
+              <p>Pedidos Totales</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="totalProductos">0</h3>
+              <p>Productos Activos</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="stat-info">
+              <h3 id="ventasHoy">$0</h3>
+              <p>Ventas Hoy</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-widgets">
+          <div class="widget">
+            <h3>Pedidos Recientes</h3>
+            <div id="recentOrdersList" class="widget-content">
+              <!-- Se llena dinámicamente -->
+            </div>
+          </div>
+          
+          <div class="widget">
+            <h3>Productos con Bajo Stock</h3>
+            <div id="lowStockList" class="widget-content">
+              <!-- Se llena dinámicamente -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Productos -->
+      <section id="productos" class="dashboard-section">
+        <div class="section-header">
+          <h2>Gestión de Productos</h2>
+          <button onclick="showAddProductModal()" class="btn-primary">
+            <i class="fas fa-plus"></i> Agregar Producto
+          </button>
+        </div>
+        
+        <div class="filters">
+          <input type="text" id="productSearch" placeholder="Buscar productos..." />
+          <select id="categoryFilter">
+            <option value="">Todas las categorías</option>
+            <option value="herramientas">Herramientas</option>
+            <option value="electricas">Eléctricas</option>
+            <option value="manuales">Manuales</option>
+            <option value="seguridad">Seguridad</option>
+          </select>
+          <select id="stockFilter">
+            <option value="">Todos los stocks</option>
+            <option value="bajo">Stock Bajo</option>
+            <option value="medio">Stock Medio</option>
+            <option value="alto">Stock Alto</option>
+          </select>
+        </div>
+        
+        <div id="productsTable" class="table-container">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </section>
+
+      <!-- Sección Usuarios -->
+      <section id="usuarios" class="dashboard-section">
+        <div class="section-header">
+          <h2>Gestión de Usuarios</h2>
+          <button onclick="showAddUserModal()" class="btn-primary">
+            <i class="fas fa-user-plus"></i> Agregar Usuario
+          </button>
+        </div>
+        
+        <div class="filters">
+          <input type="text" id="userSearch" placeholder="Buscar usuarios..." />
+          <select id="roleFilter">
+            <option value="">Todos los roles</option>
+            <option value="cliente">Cliente</option>
+            <option value="admin">Administrador</option>
+            <option value="empleado">Empleado</option>
+          </select>
+          <select id="statusFilter">
+            <option value="">Todos los estados</option>
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+        
+        <div id="usersTable" class="table-container">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </section>
+
+      <!-- Sección Pedidos -->
+      <section id="pedidos" class="dashboard-section">
+        <div class="section-header">
+          <h2>Gestión de Pedidos</h2>
+          <div class="header-actions">
+            <button onclick="exportOrders()" class="btn-secondary">
+              <i class="fas fa-download"></i> Exportar
+            </button>
+            <button onclick="refreshOrders()" class="btn-secondary">
+              <i class="fas fa-sync"></i> Actualizar
+            </button>
+          </div>
+        </div>
+        
+        <div class="filters">
+          <input type="text" id="orderSearch" placeholder="Buscar por número de pedido..." />
+          <select id="orderStatusFilter">
+            <option value="">Todos los estados</option>
+            <option value="pendiente">Pendiente</option>
+            <option value="procesando">Procesando</option>
+            <option value="enviado">Enviado</option>
+            <option value="entregado">Entregado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+          <input type="date" id="orderDateFilter" />
+        </div>
+        
+        <div id="ordersTable" class="table-container">
+          <!-- Se llena dinámicamente -->
+        </div>
+      </section>
+
+      <!-- Sección Chat de Soporte -->
+      <section id="chat-soporte" class="dashboard-section">
+        <div class="section-header">
+          <h2>Chat de Soporte</h2>
+          <div class="header-actions">
+            <button onclick="refreshChats()" class="btn-secondary">
+              <i class="fas fa-sync"></i> Actualizar
+          </button>
+            <select id="chatStatusFilter" onchange="filterChats()">
+              <option value="">Todos los estados</option>
+              <option value="abierto">Abiertos</option>
+              <option value="en_proceso">En Proceso</option>
+              <option value="cerrado">Cerrados</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="chat-container">
+          <div class="chat-list">
+            <div class="chat-list-header">
+              <h3>Conversaciones</h3>
+              <span id="totalChats">0 chats</span>
+            </div>
+            <div id="chatList" class="chat-list-content">
+              <!-- Lista de chats se llena dinámicamente -->
+            </div>
+          </div>
+          
+          <div class="chat-messages">
+            <div id="chatMessagesHeader" class="chat-messages-header" style="display: none;">
+              <div class="chat-info">
+                <h4 id="currentChatTitle">Chat #0</h4>
+                <span id="currentChatStatus" class="chat-status">Abierto</span>
+              </div>
+              <div class="chat-actions">
+                <select id="chatStateSelect" onchange="changeChatState()">
+                  <option value="abierto">Abierto</option>
+                  <option value="en_proceso">En Proceso</option>
+                  <option value="cerrado">Cerrado</option>
+                </select>
+                <button onclick="markChatAsRead()" class="btn-secondary">
+                  <i class="fas fa-check"></i> Marcar Leído
+                </button>
+              </div>
+            </div>
+            
+            <div id="chatMessagesContainer" class="chat-messages-container" style="display: none;">
+              <div id="chatMessages" class="messages-list">
+                <!-- Mensajes se llenan dinámicamente -->
+          </div>
+              
+              <div class="chat-input-container">
+                <input type="text" id="adminChatInput" placeholder="Escribe tu respuesta..." />
+                <button onclick="sendAdminMessage()" class="btn-primary">
+                  <i class="fas fa-paper-plane"></i> Enviar
+                </button>
+          </div>
+        </div>
+        
+            <div id="noChatSelected" class="no-chat-selected">
+              <i class="fas fa-comments"></i>
+              <h3>Selecciona un chat</h3>
+              <p>Elige una conversación de la lista para comenzar a responder</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Reportes -->
+      <section id="reportes" class="dashboard-section">
+        <div class="section-header">
+          <h2>Reportes y Estadísticas</h2>
+          <div class="header-actions">
+            <button onclick="generateReport('ventas')" class="btn-primary">Reporte de Ventas</button>
+            <button onclick="generateReport('productos')" class="btn-primary">Reporte de Productos</button>
+            <button onclick="generateReport('usuarios')" class="btn-primary">Reporte de Usuarios</button>
+          </div>
+        </div>
+        
+        <div class="reports-grid">
+          <div class="report-card">
+            <h3>Ventas por Mes</h3>
+            <canvas id="salesChart"></canvas>
+          </div>
+          
+          <div class="report-card">
+            <h3>Productos Más Vendidos</h3>
+            <canvas id="topProductsChart"></canvas>
+          </div>
+          
+          <div class="report-card">
+            <h3>Distribución de Usuarios</h3>
+            <canvas id="usersChart"></canvas>
+          </div>
+          
+          <div class="report-card">
+            <h3>Estado de Pedidos</h3>
+            <canvas id="ordersChart"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección Configuración -->
+      <section id="configuracion" class="dashboard-section">
+        <div class="section-header">
+          <h2>Configuración del Sistema</h2>
+        </div>
+        
+        <div class="config-grid">
+          <div class="config-card">
+            <h3>Configuración General</h3>
+            <form id="generalConfigForm">
+              <div class="form-group">
+                <label>Nombre de la Tienda</label>
+                <input type="text" id="storeName" value="Ferremas" />
+              </div>
+              <div class="form-group">
+                <label>Email de Contacto</label>
+                <input type="email" id="contactEmail" />
+              </div>
+              <div class="form-group">
+                <label>Teléfono de Contacto</label>
+                <input type="tel" id="contactPhone" />
+              </div>
+              <button type="submit" class="btn-primary">Guardar Cambios</button>
+            </form>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Modales -->
+  
+  <!-- Modal Agregar/Editar Producto -->
+  <div id="productModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="productModalTitle">Agregar Producto</h3>
+        <button onclick="closeModal('productModal')" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="productForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre del Producto</label>
+              <input type="text" id="productName" required />
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="productCategory" required>
+                <option value="">Seleccionar categoría</option>
+                <option value="herramientas">Herramientas</option>
+                <option value="electricas">Eléctricas</option>
+                <option value="manuales">Manuales</option>
+                <option value="seguridad">Seguridad</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Precio</label>
+              <input type="number" id="productPrice" min="0" step="0.01" required />
+            </div>
+            <div class="form-group">
+              <label>Stock</label>
+              <input type="number" id="productStock" min="0" required />
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea id="productDescription" rows="3"></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label>URL de Imagen</label>
+            <input type="url" id="productImage" />
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('productModal')" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Guardar Producto</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Agregar/Editar Usuario -->
+  <div id="userModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="userModalTitle">Agregar Usuario</h3>
+        <button onclick="closeModal('userModal')" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <form id="userForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre Completo</label>
+              <input type="text" id="userName" required />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="userEmail" required />
+            </div>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="tel" id="userPhone" />
+            </div>
+            <div class="form-group">
+              <label>Rol</label>
+              <select id="userRole" required>
+                <option value="">Seleccionar rol</option>
+                <option value="cliente">Cliente</option>
+                <option value="empleado">Empleado</option>
+                <option value="admin">Administrador</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>Dirección</label>
+            <textarea id="userAddress" rows="2"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contraseña</label>
+              <input type="password" id="userPassword" />
+            </div>
+            <div class="form-group">
+              <label>Confirmar Contraseña</label>
+              <input type="password" id="userPasswordConfirm" />
+            </div>
+          </div>
+          
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('userModal')" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Guardar Usuario</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Detalles de Pedido -->
+  <div id="orderDetailsModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Detalles del Pedido</h3>
+        <button onclick="closeModal('orderDetailsModal')" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="orderDetailsContent">
+          <!-- Se llena dinámicamente -->
+        </div>
+        <div class="order-actions">
+          <button onclick="updateOrderStatus()" class="btn-primary">Actualizar Estado</button>
+          <button onclick="contactCustomer()" class="btn-secondary">Contactar Cliente</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Contactar Cliente -->
+  <div id="contactModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Contactar Cliente</h3>
+        <button onclick="closeModal('contactModal')" class="modal-close">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="customerInfo">
+          <!-- Información del cliente -->
+        </div>
+        <form id="contactForm">
+          <div class="form-group">
+            <label>Asunto</label>
+            <input type="text" id="contactSubject" required />
+          </div>
+          <div class="form-group">
+            <label>Mensaje</label>
+            <textarea id="contactMessage" rows="5" required></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="button" onclick="closeModal('contactModal')" class="btn-secondary">Cancelar</button>
+            <button type="submit" class="btn-primary">Enviar Mensaje</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/emp_dashboard.js"></script>
+</body>
+</html>

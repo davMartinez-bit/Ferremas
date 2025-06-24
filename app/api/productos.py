@@ -17,13 +17,13 @@ from app.api.schemas import (
 
 from app.services.productos import ProductoService
 
-router = APIRouter()
+router = APIRouter(tags=["Productos"])
 
 # =============================================================================
 # ENDPOINTS DE PRODUCTOS
 # =============================================================================
 
-@router.get("/productos/{codigo}", response_model=ProductoResponse, summary="Obtener producto por código")
+@router.get("/{codigo}", response_model=ProductoResponse, summary="Obtener producto por código")
 def obtener_producto_por_codigo(
     codigo: str, 
     db: Session = Depends(get_db)
@@ -49,7 +49,7 @@ def obtener_producto_por_codigo(
     
     return resultado
 
-@router.get("/productos/", response_model=List[ProductoBasic], summary="Buscar productos con filtros")
+@router.get("/", response_model=List[ProductoResponse], summary="Buscar productos con filtros")
 def buscar_productos(
     nombre: Optional[str] = Query(None, description="Buscar por nombre (búsqueda parcial)", example="martillo"),
     categoria: Optional[str] = Query(None, description="Filtrar por categoría", example="Herramientas"),
@@ -63,11 +63,12 @@ def buscar_productos(
     - **categoria**: Filtrar productos por categoría
     - **stock_max**: Mostrar productos con stock menor o igual al valor especificado
     
-    Al menos uno de los filtros debe ser proporcionado.
+    Si no se proporcionan filtros, devuelve todos los productos.
     
     ### Ejemplos de uso:
     ```
-    GET /api/productos/?nombre=martillo
+    GET /api/productos/                    # Todos los productos
+    GET /api/productos/?nombre=martillo    # Productos con "martillo" en el nombre
     GET /api/productos/?categoria=Herramientas
     GET /api/productos/?stock_max=5
     ```
@@ -81,12 +82,10 @@ def buscar_productos(
     elif stock_max is not None:
         return service.get_productos_by_stock(stock_max)
     else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Debes especificar al menos un filtro (nombre, categoria o stock_max)"
-        )
+        # Si no hay filtros, devolver todos los productos
+        return service.get_all_productos()
 
-@router.get("/productos/{codigo}/precios", response_model=HistorialPreciosResponse, summary="Historial de precios")
+@router.get("/{codigo}/precios", response_model=HistorialPreciosResponse, summary="Historial de precios")
 def obtener_historial_precios(
     codigo: str,
     fecha: Optional[str] = Query(None, description="Fecha desde la cual obtener el historial (formato: YYYY-MM-DD)", example="2024-01-01"),
@@ -115,7 +114,7 @@ def obtener_historial_precios(
     
     return resultado
 
-@router.post("/productos/", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED, summary="Crear nuevo producto")
+@router.post("/", response_model=ProductoResponse, status_code=status.HTTP_201_CREATED, summary="Crear nuevo producto")
 def crear_producto(
     producto_data: ProductoCreate, 
     db: Session = Depends(get_db)
@@ -158,7 +157,7 @@ def crear_producto(
     
     return resultado
 
-@router.put("/productos/{codigo}", response_model=ProductoResponse, summary="Actualizar producto")
+@router.put("/{codigo}", response_model=ProductoResponse, summary="Actualizar producto")
 def actualizar_producto(
     codigo: str, 
     producto_data: ProductoUpdate, 
@@ -207,29 +206,38 @@ def actualizar_producto(
     
     return resultado
 
-@router.delete("/productos/{codigo}", summary="Eliminar producto")
+@router.delete("/{codigo}", summary="Eliminar producto")
 def eliminar_producto(
     codigo: str, 
     db: Session = Depends(get_db)
 ):
     """
-    Elimina lógicamente un producto (lo marca como inactivo).
+    Elimina un producto del sistema (marca como inactivo).
     
     - **codigo**: Código del producto a eliminar
+    - El producto se marca como inactivo en lugar de eliminarse físicamente
     
-    El producto no se elimina físicamente de la base de datos, 
-    sino que se marca como inactivo para mantener la integridad referencial.
+    ### Ejemplo de uso:
+    ```
+    DELETE /api/productos/MTL-001
+    ```
     """
     service = ProductoService(db)
     resultado = service.delete_producto(codigo)
     
     if "error" in resultado:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=resultado["error"]
-        )
+        if "no encontrado" in resultado["error"].lower():
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=resultado["error"]
+            )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=resultado["error"]
+            )
     
-    return resultado
+    return {"message": resultado["message"]}
 
 # =============================================================================
 # ENDPOINTS DE PRODUCTOS DESTACADOS

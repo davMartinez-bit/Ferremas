@@ -28,12 +28,17 @@ def obtener_valor_divisa(moneda: Literal["usd", "eur"], fecha: str = None) -> di
         fecha = datetime.now().strftime("%Y-%m-%d")
 
     try:
-        df = siete.series(codigo, desde=fecha, hasta=fecha)
-        valor = df.iloc[0]['value']
+        # Usar el método cuadro para obtener datos
+        df = siete.cuadro(codigo, desde=fecha, hasta=fecha)
+        if df.empty:
+            return {"error": f"No hay datos disponibles para {moneda} en {fecha}"}
+        
+        # El valor está en la primera fila, columna 'valor' o similar
+        valor = df.iloc[0].iloc[-1]  # Última columna (valor)
         return {
             "moneda": moneda.upper(),
             "fecha": fecha,
-            "valor_clp": valor
+            "valor_clp": float(valor)
         }
     except Exception as e:
         return {"error": str(e)}
@@ -45,14 +50,23 @@ def obtener_todas_las_divisas(fecha: str = None) -> list:
     resultados = []
     for moneda, codigo in CURRENCY_CODES.items():
         try:
-            df = siete.series(codigo, desde=fecha, hasta=fecha)
-            valor = df.iloc[0]['value']
-            resultados.append({
-                "moneda": moneda.upper(),
-                "codigo": codigo,
-                "fecha": fecha,
-                "valor_clp": valor
-            })
+            # Usar el método cuadro para obtener datos
+            df = siete.cuadro(codigo, desde=fecha, hasta=fecha)
+            if df.empty:
+                resultados.append({
+                    "moneda": moneda.upper(),
+                    "codigo": codigo,
+                    "fecha": fecha,
+                    "error": f"No hay datos disponibles para {moneda} en {fecha}"
+                })
+            else:
+                valor = df.iloc[0].iloc[-1]  # Última columna (valor)
+                resultados.append({
+                    "moneda": moneda.upper(),
+                    "codigo": codigo,
+                    "fecha": fecha,
+                    "valor_clp": float(valor)
+                })
         except Exception as e:
             resultados.append({
                 "moneda": moneda.upper(),
